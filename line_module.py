@@ -125,10 +125,11 @@ class Bezier:
 
 			rads = [base_line.radian(PlaneLine([current_p, p]),
 			                         PlaneLine.DegRange.ZERO__2PI) for p in plst]
-
-			last_index = len(rads)
-			rads.append(base_line.radian(
-				PlaneLine([current_p, init_p]), PlaneLine.DegRange.ZERO__2PI))
+			
+			last_index = None
+			if not convexhull_lines == []:
+				last_index = len(rads)
+				rads.append(base_line.radian(PlaneLine([current_p, init_p]), PlaneLine.DegRange.ZERO__2PI))
 
 			pop_index = np.array(rads).argmin()
 			if pop_index == last_index:
