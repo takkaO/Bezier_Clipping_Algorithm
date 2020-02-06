@@ -1,5 +1,6 @@
 import numpy as np
 import matplotlib.pyplot as plt
+from copy import deepcopy
 from line_module import Point, Bezier, PlaneLine
 
 class BezierClipping:
@@ -53,7 +54,8 @@ class BezierClipping:
 		dic["current_line"] = _line
 		dic["precision"] = precision
 
-		self._clipping(dic)
+		res = self._clipping(dic)
+		print(res)
 	
 	def _clipping(self, dic):
 		convexhull = dic["current_bezier"].getConvexhullLines()
@@ -64,7 +66,40 @@ class BezierClipping:
 				continue
 			t.append(p)
 		
-		print(t)
+		if len(t) == 0:
+			msg = "Failed to search 't' value"
+			raise ValueError(msg)
+		elif len(t) == 1:
+			return dic["current_line"].midpoint.x
+		else:
+			t = sorted(t, key=lambda p: p.x)
+		
+		## Fetch t_min and t_max
+		t_min = t[0].x
+		t_max = t[-1].x
+
+		bez, _ = dic["base_bezier"].split(t_max)
+		bez_t = t_min / t_max
+		_, next_bezier = bez.split(bez_t)
+		next_line = PlaneLine([(t_min, 0), (t_max, 0)])			
+
+		if np.abs(dic["current_line"].length - next_line.length) < 1e-6:
+			## Target has a multi cross point
+			b1, b2 = next_bezier.split(0.5)
+			dic1 = deepcopy(dic)
+			dic1["current_bezier"] = b1
+			dic1["current_line"] = next_line
+			dic2 = deepcopy(dic)
+			dic2["current_bezier"] = b2
+			dic2["current_line"] = next_line
+			return self._clipping(dic1), self._clipping(dic2)
+
+		if next_line.length	<= dic["precision"]:
+			return next_line.midpoint.x
+		dic["current_bezier"] = next_bezier
+		dic["current_line"] = next_line
+		return self._clipping(dic)
+
 
 def main():
 	b1 = Bezier([(0, -1), (1.0/3.0, 3), (2.0/3.0, -4), (1.0, 3)])

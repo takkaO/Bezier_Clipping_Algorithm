@@ -33,6 +33,11 @@ class Point:
 	@y.setter
 	def y(self, _y):
 		self._point[1] = _y
+	
+	def plot(self, ax = None, fmt = 'o'):
+		if ax is None:
+			_, ax = plt.subplots()
+		ax.plot(self.x, self.y, fmt)
 
 	def distance(self, point):
 		"""
@@ -209,6 +214,7 @@ class Bezier:
 		for i, l in enumerate(lst):
 			mtx = [Q[i][e] if not e == -1 else 0 for e in l]
 			_Q[i] = np.array(mtx)
+		_Q = np.flipud(_Q)
 		
 		right_bezier = Bezier(list(zip(_Q @ X, _Q @ Y)))
 
@@ -255,11 +261,6 @@ class PlaneLine:
 		self._points = points
 
 	@property
-	def x_base_line(self):
-		## TODO: Is it need?
-		return PlaneLine([self.plist[0], (self.plist[0][0]+1, (self.plist[0][1]))])
-
-	@property
 	def plist(self):
 		return [e.point for e in self._points]
 
@@ -282,7 +283,7 @@ class PlaneLine:
 
 	@property
 	def midpoint(self):
-		return (self._points[0] + self._points[1]) / 2.0
+		return Point((self.plist[0] + self.plist[1]) / 2.0)
 
 	@property
 	def length(self):
@@ -360,14 +361,17 @@ class PlaneLine:
 
 
 def main():
-	b1 = Bezier([(0, 0), (1/2, 2), (1, -3), (1.5, 0)])
+	b1 = Bezier([(0, -1), (1.0/3.0, 3), (2.0/3.0, -4), (1.0, 3)])
 	base = PlaneLine([(0, 0), (1, 0)])
 	ax = b1.plot()
-	base.plot(ax)
+	#base.plot(ax)
 
 	nb1, nb2 = b1.split(0.5)
 	nb1.plot(ax, bcolor = "red")
 	nb2.plot(ax, bcolor = "blue")
+
+	for p in nb2.points:
+		p.plot(ax)
 
 	plt.grid()
 	#ax.set_aspect('equal')
