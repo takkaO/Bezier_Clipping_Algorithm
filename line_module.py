@@ -1,8 +1,6 @@
 import numpy as np
 from scipy.special import comb
 from enum import Enum, auto
-from matplotlib.path import Path
-import matplotlib.patches as patches
 import matplotlib.pyplot as plt
 
 
@@ -37,6 +35,20 @@ class Point:
 		self._point[1] = _y
 
 	def distance(self, point):
+		"""
+		Calcurate distance between two points in 2D.
+
+		Parameters
+		----------
+		point : Point or number tuple or number list
+			Target point coodinates.
+
+		Returns
+		-------
+		two points distance : float
+			Distance from this point to target point.
+		"""
+
 		if not isinstance(point, Point):
 			try:
 				point = Point(point[0], point[1])
@@ -77,7 +89,23 @@ class Bezier:
 		xs, ys = zip(*self.plist)
 		return xs, ys
 
-	def getConvexhullLine(self):
+	def getConvexhullLines(self):
+		"""
+		Fetch Bezier curve's convex-hull lines list
+
+		Parameters
+		----------
+		None.
+
+		Returns
+		-------
+		convexhull_lines : list of PlaneLine object
+			List of Convex-hull lines.
+		
+		Note
+		-------
+		Using gift wrapping algorithm.
+		"""
 		plst = self.plist
 		## search most left and bottom point
 		plst = sorted(plst, key=lambda x: x[0], reverse=True)
@@ -117,25 +145,85 @@ class Bezier:
 		return comb(n, i) * t**i * (1 - t)**(n-i)
 
 	def bezier_point(self, t):
+		"""
+		Fetch the value of a point on a Bezier curve.
+
+		Parameters
+		----------
+		t : float
+			The value of the parameter t.
+
+		Returns
+		-------
+		p : Point object
+			(x, y) coodinates at parameter t.
+		
+		Note 
+		-------
+		t must be in the range 0 to 1.
+		"""
+		if t < 0 or 1 < t:
+			msg = "t must be in the range 0 to 1"
+			raise ValueError(msg)
+
 		p = np.zeros(2)
 		for i, f in enumerate(self._points):
 			p += self._bernstein(self.dims, i, t) * f.point
-		return p
+		return Point(p)
 	
-	def split(self):
-		pass
+	def create_Ux(self, dims=None):
+		if dims is None:
+			dims = self.dims
 
+		U = np.zeros([dims + 1, dims + 1])
+		lmbd = lambda n, i, j: comb(n, j) * comb(n-j, i-j) * (-1)**(i - j)
+
+		for i in range(dims + 1):
+			lst = list(range(i+1)) + [-1]*(dims-i)
+			elems = [lmbd(dims, i, j) if j >= 0 else 0.0 for j in lst]
+			mtx = np.array(elems)
+			U[i] = mtx
+		return U
+	
+	def split(self, t):
+		M = self.create_Ux()
+		iM = np.linalg.inv(M)
+
+		Z = np.eye(self.dims + 1)
+		for i in range(self.dims + 1):
+			Z[i] = Z[i] * t ** i 		
+		Q = iM @ Z @ M
+		
+		xs, ys = self.points4matplot
+		X = np.array(xs)
+		Y = np.array(ys)
+
+		left_bezier = Bezier(list(zip(Q @ X, Q @ Y)))
+
+		_Q = np.zeros((self.dims + 1, self.dims + 1))
+		lst = []
+		for i in reversed(range(self.dims + 1)):
+			l = [-1] * i + list(range(self.dims + 1 - i))
+			lst.append(l)
+		for i, l in enumerate(lst):
+			mtx = [Q[i][e] if not e == -1 else 0 for e in l]
+			_Q[i] = np.array(mtx)
+		
+		right_bezier = Bezier(list(zip(_Q @ X, _Q @ Y)))
+
+		return left_bezier, right_bezier
+			
 	def plot(self, ax=None, with_ctrl_pt=True, bcolor="black", ccolor="gray", resolution=100):
 		if ax is None:
 			_, ax = plt.subplots()
 		prev_point = None
 		for t in np.linspace(0, 1, resolution):
-			x, y = self.bezier_point(t)
+			bp = self.bezier_point(t)
 			if prev_point is None:
-				prev_point = (x, y)
-			xs, ys = zip(*(prev_point, (x, y)))
+				prev_point = (bp.x, bp.y)
+			xs, ys = zip(*(prev_point, (bp.x, bp.y)))
 			ax.plot(xs, ys, '-', color=bcolor)
-			prev_point = (x, y)
+			prev_point = (bp.x, bp.y)
 
 		if with_ctrl_pt:
 			xs, ys = self.points4matplot
@@ -271,20 +359,14 @@ class PlaneLine:
 
 
 def main():
-	b1 = Bezier([(0, -2), (1/3, 2), (2/3, -3), (1, 1), (1.3, 0), (1.5, 2)])
+	b1 = Bezier([(0, 0), (1/2, 2), (1, -3), (1.5, 0)])
 	base = PlaneLine([(0, 0), (1, 0)])
 	ax = b1.plot()
 	base.plot(ax)
 
-
-	lines = b1.getConvexhullLine()
-
-	for line in lines:
-		ax = line.plot(ax)
-		p = line.cross_point(base)
-		if not p is None:
-			ax.plot(p.x, p.y, 'o', color="red")
-		plt.pause(1)
+	nb1, nb2 = b1.split(0.5)
+	nb1.plot(ax, bcolor = "red")
+	nb2.plot(ax, bcolor = "blue")
 
 	plt.grid()
 	#ax.set_aspect('equal')
