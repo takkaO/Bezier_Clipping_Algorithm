@@ -166,10 +166,11 @@ def main():
 	l1.plot(ax)
 	
 	res = bc.detect_intersection(b1, l1)	
-	print("Result1:\n", res)
+	print("Result1:")
 	if not res == []:
 		ts, ps = zip(*res)
-		for p in ps:
+		for t, p in zip(ts, ps):
+			print("t:{:.3f} -> (x, y) = {}".format(t, p.point))
 			p.plot(ax, fmt="or")
 	plt.grid()
 	
@@ -180,10 +181,11 @@ def main():
 	l2.plot(ax)
 
 	res = bc.detect_intersection(b2, l2)
-	print("Result2:\n", res)
+	print("Result2:")
 	if not res == []:
 		ts, ps = zip(*res)
-		for p in ps:
+		for t, p in zip(ts, ps):
+			print("t:{:.3f} -> (x, y) = {}".format(t, p.point))
 			p.plot(ax, fmt="or")
 
 	plt.grid()

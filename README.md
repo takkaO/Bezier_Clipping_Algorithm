@@ -1,6 +1,8 @@
 # Bezier Clipping Algorithm
 
-2D bezier clipping algorithm.
+## Features
+Implemented Bezier Clipping algorithm with Python.  
+This program finds the intersection of a straight line and a Bezier curve. 
 
 ## Environment
 - Python3.6
@@ -14,7 +16,20 @@ Execute below command.
 python main.py
 ```
 
-You will get below images.
+You will get below images. Red point is intersection.
+![result1](https://github.com/takkaO/Bezier_Clipping_Algorithm/blob/images/Figure_1.png?raw=true)
+```
+Result1:
+t:0.074 -> (x, y) = [ 0.09929439 -1.76824575]
+t:0.595 -> (x, y) = [0.88230049 0.05870114]
+t:0.878 -> (x, y) = [1.33648382 1.11846224]
+```
+
+![result2](https://github.com/takkaO/Bezier_Clipping_Algorithm/blob/images/Figure_2.png?raw=true)
+```
+t:0.067 -> (x, y) = [ 3.27081548 -3.36609438]
+t:0.829 -> (x, y) = [7.00386554 1.4335414 ]
+```
 
 
 ## Reference
