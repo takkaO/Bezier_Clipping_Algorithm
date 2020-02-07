@@ -454,6 +454,11 @@ class PlaneLine:
 		a = np.dot(base_line.plist[1], line.plist[1])
 		b = np.cross(base_line.plist[1], line.plist[1])
 		cos = a / (base_line.length * line.length + 1e-12)
+		if np.abs(cos) > 1:
+			if np.abs(cos) - 1 > 1e-8:
+				msg = "Invalid cos value was Calculated."
+				raise ValueError(msg)
+			cos = np.sign(cos)
 		theta = np.arccos(cos)
 
 		if rad_range == self.DegRange.ZERO__PI:
@@ -465,6 +470,30 @@ class PlaneLine:
 			if b < 0:
 				theta = 2 * np.pi - theta
 		return theta
+	
+	
+	def rotate(self, rad):
+		"""
+		Rotate and make new lines.
+
+		Parameters
+		----------
+		rad : float
+			The value of Rotate radian.
+		
+		Returns
+		-------
+		line : PlaneLine object
+			Rotated PlaneLine object.
+		"""
+		rv = np.array([[np.cos(rad), -np.sin(rad)],
+                       [np.sin(rad),  np.cos(rad)]])
+
+		p = []
+		for c in self.plist:
+			p.append(np.dot(rv, c))
+
+		return PlaneLine(p)
 
 
 	def plot(self, ax=None, linestyle="o-", color=None):
