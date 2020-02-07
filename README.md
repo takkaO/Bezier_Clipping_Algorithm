@@ -1,6 +1,20 @@
 # Bezier Clipping Algorithm
 
-2D bezier clipping algorithm
+2D bezier clipping algorithm.
+
+## Environment
+- Python3.6
+  - scipy == 1.3.1
+  - numpy == 1.17.3
+  - matplotlib == 3.1.1
+
+## Run sample
+Execute below command.  
+```
+python main.py
+```
+
+You will get below images.
 
 
 ## Reference

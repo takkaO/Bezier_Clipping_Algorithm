@@ -34,10 +34,12 @@ class Point:
 	def y(self, _y):
 		self._point[1] = _y
 	
+
 	def plot(self, ax = None, fmt = 'o'):
 		if ax is None:
 			_, ax = plt.subplots()
 		ax.plot(self.x, self.y, fmt)
+
 
 	def distance(self, point):
 		"""
@@ -94,6 +96,7 @@ class Bezier:
 		xs, ys = zip(*self.plist)
 		return xs, ys
 
+
 	def getConvexhullLines(self):
 		"""
 		Fetch Bezier curve's convex-hull lines list
@@ -147,8 +150,10 @@ class Bezier:
 			current_p = nxt
 		return convexhull_lines
 
+
 	def _bernstein(self, n, i, t):
 		return comb(n, i) * t**i * (1 - t)**(n-i)
+
 
 	def bezier_point(self, t):
 		"""
@@ -177,7 +182,21 @@ class Bezier:
 			p += self._bernstein(self.dims, i, t) * f.point
 		return Point(p)
 	
+
 	def create_Ux(self, dims=None):
+		"""
+		Make lower trianglar matrix for formula transformation.
+
+		Parameters
+		----------
+		dims : int
+			The value of the Bezier cirve dimensional.
+
+		Returns
+		-------
+		Ux : ndarray
+			Lower trianglar matrix.
+		"""
 		if dims is None:
 			dims = self.dims
 
@@ -191,7 +210,29 @@ class Bezier:
 			U[i] = mtx
 		return U
 	
+
 	def split(self, t):
+		"""
+		Split Bezier curve at point 't'.
+
+		Parameters
+		----------
+		t : float
+			The value of the parameter t at split point.
+
+		Returns
+		-------
+		(b1, b2) : Tuple of Bezier object
+			Splited left Bezier curve and right Bezier curve.
+		
+		Note 
+		-------
+		t must be in the range 0 to 1.
+		"""
+		if t < 0 or 1 < t:
+			msg = "t must be in the range 0 to 1"
+			raise ValueError(msg)
+
 		M = self.create_Ux()
 		iM = np.linalg.inv(M)
 
@@ -289,7 +330,27 @@ class PlaneLine:
 	def length(self):
 		return self._points[0].distance(self._points[1])
 
-	def cross_point(self, pl, error=1e-12):
+
+	def intersection(self, pl, error=1e-12):
+		"""
+		Fetch the intersection point of two lines.
+
+		Parameters
+		----------
+		pl : PlaneLine object
+			Target line.
+		error : float
+			Small values for avoiding calculation errors.
+
+		Returns
+		-------
+		p : Point object
+			Intersection coodinates.
+		
+		Note 
+		-------
+		If no intersection, return None.
+		"""
 		if not isinstance(pl, PlaneLine):
 			msg = "Invalid arguments"
 			raise TypeError(msg)
@@ -306,7 +367,27 @@ class PlaneLine:
 			return Point(Xp, Yp)
 		return None
 
+
 	def is_point_on_line(self, point, error=1e-3):
+		"""
+		Check the point is on the line.
+
+		Parameters
+		----------
+		point : Point object or number tuple or number list
+			The value of point to check.
+		error : float
+			Calculation precision.
+
+		Returns
+		-------
+		result : bool
+			Returns True if the point is on the line, False otherwise.
+		
+		Note 
+		-------
+		Using triangle inequality algorithm.
+		"""
 		p1 = self._points[0]
 		p2 = self._points[1]
 		if isinstance(point, Point):
@@ -321,7 +402,25 @@ class PlaneLine:
 
 		return ac + bc < ab + error
 
+
 	def translation(self, move_dist=None):
+		"""
+		Create a new PlaneLine object by translating this PlaneLine.
+
+		Parameters
+		----------
+		move_dist : Point object or ndarray
+			Amount to translate.
+		
+		Returns
+		-------
+		pl : PlaneLine object
+			PlaneLine after translation.
+		
+		Note 
+		-------
+		if 'move_dist' is none, move to based on (0,0).
+		"""
 		if move_dist is None:
 			## if none, set first point to move (0,0)
 			move_dist = -self.plist[0]
@@ -330,7 +429,23 @@ class PlaneLine:
 		plst = self.plist
 		return PlaneLine([p + move_dist for p in plst])
 
+
 	def radian(self, line, rad_range=None):
+		"""
+		Calculate the angle between two straight lines.
+
+		Parameters
+		----------
+		line : PlaneLine object
+			Target line.
+		rad_range : DegRange
+			Range of radian.
+
+		Returns
+		-------
+		radian : float
+			Value of the radian.
+		"""
 		if rad_range is None:
 			rad_range = self.DegRange.ZERO__PI
 		base_line = self.translation()
@@ -350,6 +465,7 @@ class PlaneLine:
 			if b < 0:
 				theta = 2 * np.pi - theta
 		return theta
+
 
 	def plot(self, ax=None, linestyle="o-", color=None):
 		if ax is None:
