@@ -27,6 +27,7 @@ t:0.878 -> (x, y) = [1.33648382 1.11846224]
 
 ![result2](https://github.com/takkaO/Bezier_Clipping_Algorithm/blob/images/Figure_2.png?raw=true)
 ```
+Result2:
 t:0.067 -> (x, y) = [ 3.27081548 -3.36609438]
 t:0.829 -> (x, y) = [7.00386554 1.4335414 ]
 ```
