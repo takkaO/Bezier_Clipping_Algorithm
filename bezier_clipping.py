@@ -1,7 +1,7 @@
 import numpy as np
 import matplotlib.pyplot as plt
 from copy import deepcopy
-from line_module import Point, Bezier, PlaneLine
+from .line_module import Point, Bezier, PlaneLine
 
 class BezierClipping:
 	def _check_arguments(self, target_bezier, target_line):
