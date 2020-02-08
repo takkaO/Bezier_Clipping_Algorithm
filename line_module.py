@@ -173,8 +173,8 @@ class Bezier:
 		-------
 		t must be in the range 0 to 1.
 		"""
-		if t < 0 or 1 < t:
-			msg = "t must be in the range 0 to 1"
+		if t < -1e-8 or 1 + 1e-8 < t:
+			msg = "t must be in the range 0 to 1, but get " + str(t)
 			raise ValueError(msg)
 
 		p = np.zeros(2)
@@ -229,8 +229,8 @@ class Bezier:
 		-------
 		t must be in the range 0 to 1.
 		"""
-		if t < 0 or 1 < t:
-			msg = "t must be in the range 0 to 1"
+		if t < -1e-8 or 1 + 1e-8 < t:
+			msg = "t must be in the range 0 to 1, but get " + str(t)
 			raise ValueError(msg)
 
 		M = self.create_Ux()

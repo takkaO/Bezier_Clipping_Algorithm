@@ -133,10 +133,13 @@ class BezierClipping:
 		t_min = t[0].x
 		t_max = t[-1].x
 
+		next_line = PlaneLine([(t_min, 0), (t_max, 0)])
+		if next_line.length <= dic["precision"]:
+			return next_line.midpoint.x
+
 		bez, _ = dic["base_bezier"].split(t_max)
 		bez_t = t_min / t_max
 		_, next_bezier = bez.split(bez_t)
-		next_line = PlaneLine([(t_min, 0), (t_max, 0)])			
 
 		if np.abs(dic["current_line"].length - next_line.length) < 1e-6:
 			## Target has more than 2 intersection
@@ -149,8 +152,6 @@ class BezierClipping:
 			dic2["current_line"] = next_line
 			return self._clipping(dic1), self._clipping(dic2)
 
-		if next_line.length	<= dic["precision"]:
-			return next_line.midpoint.x
 		dic["current_bezier"] = next_bezier
 		dic["current_line"] = next_line
 		return self._clipping(dic)

@@ -13,7 +13,7 @@ This program finds the intersection of a straight line and a Bezier curve.
 ## Run sample
 Execute below command.  
 ```
-python main.py
+python bezier_clipping.py
 ```
 
 You will get below images. Red point is intersection.
