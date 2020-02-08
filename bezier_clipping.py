@@ -131,14 +131,18 @@ class BezierClipping:
 		
 		## Fetch t_min and t_max
 		t_min = t[0].x
+		if t_min < 0:
+			t_min = 0.0
 		t_max = t[-1].x
+		if t_max < 0.0:
+			t_max = 0.0
 
 		next_line = PlaneLine([(t_min, 0), (t_max, 0)])
 		if next_line.length <= dic["precision"]:
 			return next_line.midpoint.x
 
 		bez, _ = dic["base_bezier"].split(t_max)
-		bez_t = t_min / t_max
+		bez_t = t_min / (t_max + 1e-12)
 		_, next_bezier = bez.split(bez_t)
 
 		if np.abs(dic["current_line"].length - next_line.length) < 1e-6:
