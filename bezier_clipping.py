@@ -39,10 +39,6 @@ class BezierClipping:
 		-------
 		bezier_curve : Bezier object
 			New non-parametric Bezier curve.
-		
-		Note 
-		-------
-		The standard for the distance between a Bezier curve and a straight line is a point on the Bezier curve.
 		"""
 		if not self._check_arguments(target_bezier, target_line):
 			msg = "Invalid arguments."
@@ -53,7 +49,7 @@ class BezierClipping:
 		control_point = []
 		n = target_bezier.dims
 		for i, point in enumerate(target_bezier.points):
-			d = (a * point.x + b * point.y + c) / (np.sqrt(a**2 + b**2) + error)
+			d = -(a * point.x + b * point.y + c) / (np.sqrt(a**2 + b**2) + error)
 			control_point.append((i/n, d))
 		return Bezier(control_point)
 	
