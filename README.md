@@ -42,3 +42,4 @@ t:0.829 -> (x, y) = [7.00386554 1.4335414 ]
 - [ベジェ曲線を手で描いてみる - にせねこメモ](https://nixeneko.hatenablog.com/entry/2015/06/26/075022)
 - [A Primer on Bezier Curves](https://pomax.github.io/bezierinfo/#splitting)
 - [A Matrix method for efficient computation of Bernstein coefficients](https://interval.louisiana.edu/reliable-computing-journal/volume-17/reliable-computing-17-pp-40-71.pdf)
+- [De Casteljau's algorithm](https://en.wikipedia.org/wiki/De_Casteljau%27s_algorithm)

@@ -66,6 +66,10 @@ class Point:
 
 
 class Bezier:
+	class SplitMethod(Enum):
+		RECURSION = auto()
+		MATRIX = auto()
+
 	def __init__(self, points):
 		if not isinstance(points, list):
 			msg = "We assume 'list' object but get {0}".format(type(points))
@@ -78,6 +82,19 @@ class Bezier:
 
 		self._n = len(points)
 		self._points = points
+
+		## Allowable calculation error of 't'
+		self._t_tolerance = 1e-8
+
+	@property
+	def t_tolerance(self):
+		return self._t_tolerance
+	
+	@t_tolerance.setter
+	def t_tolerance(self, value):
+		value = np.abs(value)
+		if value <= 0.1:
+			self._t_tolerance = value
 
 	@property
 	def dims(self):
@@ -162,19 +179,19 @@ class Bezier:
 		Parameters
 		----------
 		t : float
-			The value of the parameter t.
+			The value of the parameter 't'.
 
 		Returns
 		-------
 		p : Point object
-			(x, y) coodinates at parameter t.
+			(x, y) coodinates at parameter 't'.
 		
 		Note 
 		-------
-		t must be in the range 0 to 1.
+		't' must be in the range 0 to 1.
 		"""
-		if t < -1e-8 or 1 + 1e-8 < t:
-			msg = "t must be in the range 0 to 1, but get " + str(t)
+		if t < -self.t_tolerance or 1 + self.t_tolerance < t:
+			msg = "'t' must be in the range 0 to 1, but get " + str(t)
 			raise ValueError(msg)
 
 		p = np.zeros(2)
@@ -182,6 +199,132 @@ class Bezier:
 			p += self._bernstein(self.dims, i, t) * f.point
 		return Point(p)
 	
+
+	def split(self, t, algorithm=None):
+		"""
+		Split Bezier curve at point 't'.
+
+		Parameters
+		----------
+		t : float
+			The value of the parameter 't' at split point.
+		algorithm : SplitMethod
+			Bezier split algorithm. Default is SpliiMathod.MATRIX.
+
+		Returns
+		-------
+		(b1, b2) : Tuple of Bezier object
+			Splited left Bezier curve and right Bezier curve.
+		
+		Note 
+		-------
+		't' must be in the range 0 to 1.
+		"""
+		if t < -self.t_tolerance or 1 + self.t_tolerance < t:
+			msg = "'t' must be in the range 0 to 1, but get " + str(t)
+			raise ValueError(msg)
+
+		if algorithm is None:
+			algorithm = self.SplitMethod.MATRIX
+		
+		if algorithm == self.SplitMethod.MATRIX:
+			return self._split_with_matrix(t)
+		elif algorithm == self.SplitMethod.RECURSION:
+			return self._split_with_recursion(t)
+
+
+	def _de_casteljau_algorithm(self, points, t):
+		"""
+		De Casteljau algorithm for split bezier curve.
+
+		Parameters
+		----------
+		points : list of Point object
+			Control points.
+		t : float
+			The value of the parameter 't' at split point.
+
+		Returns
+		-------
+		p_list : Nested list
+			List. Pyramid of internally dividing points.
+		"""
+		prev_p = None
+		q = []
+		for p in points:
+			if not prev_p is None:
+				q.append(Point((1-t) * prev_p.point + t * p.point))
+			prev_p = p
+		if len(q) == 1:
+			return [q]
+		return [q] + self._de_casteljau_algorithm(q, t)
+
+
+	def _split_with_recursion(self, t):
+		"""
+		Split bezier curve with recursion algorithm (de Casteljau's algorithm).
+
+		Parameters
+		----------
+		t : float
+			The value of the parameter 't' at split point.
+
+		Returns
+		-------
+		(b1, b2) : Tuple of Bezier object
+			Splited left Bezier curve and right Bezier curve.
+		"""
+		ret = [self.points] + self._de_casteljau_algorithm(self.points, t)
+		lp = []
+		rp = []
+		for lst in ret:
+			lp.append(lst[0])
+			rp.append(lst[-1])
+		return Bezier(lp), Bezier(rp)
+
+
+	def _split_with_matrix(self, t):
+		"""
+		Split bezier curve with matrix algorithm.
+
+		Parameters
+		----------
+		t : float
+			The value of the parameter 't' at split point.
+
+		Returns
+		-------
+		(b1, b2) : Tuple of Bezier object
+			Splited left Bezier curve and right Bezier curve.
+		"""
+		M = self.create_Ux()
+		iM = np.linalg.inv(M)
+
+		Z = np.eye(self.dims + 1)
+		for i in range(self.dims + 1):
+			Z[i] = Z[i] * t ** i
+		Q = iM @ Z @ M
+
+		xs, ys = self.points4matplot
+		X = np.array(xs)
+		Y = np.array(ys)
+
+		left_bezier = Bezier(list(zip(Q @ X, Q @ Y)))
+
+		_Q = np.zeros((self.dims + 1, self.dims + 1))
+		lst = []
+		for i in reversed(range(self.dims + 1)):
+			l = [-1] * i + list(range(self.dims + 1 - i))
+			lst.append(l)
+		for i, l in enumerate(lst):
+			mtx = [Q[i][e] if not e == -1 else 0 for e in l]
+			_Q[i] = np.array(mtx)
+		_Q = np.flipud(_Q)
+
+		right_bezier = Bezier(list(zip(_Q @ X, _Q @ Y)))
+
+		return left_bezier, right_bezier
+
 
 	def create_Ux(self, dims=None):
 		"""
@@ -209,57 +352,7 @@ class Bezier:
 			mtx = np.array(elems)
 			U[i] = mtx
 		return U
-	
-
-	def split(self, t):
-		"""
-		Split Bezier curve at point 't'.
-
-		Parameters
-		----------
-		t : float
-			The value of the parameter t at split point.
-
-		Returns
-		-------
-		(b1, b2) : Tuple of Bezier object
-			Splited left Bezier curve and right Bezier curve.
 		
-		Note 
-		-------
-		t must be in the range 0 to 1.
-		"""
-		if t < -1e-8 or 1 + 1e-8 < t:
-			msg = "t must be in the range 0 to 1, but get " + str(t)
-			raise ValueError(msg)
-
-		M = self.create_Ux()
-		iM = np.linalg.inv(M)
-
-		Z = np.eye(self.dims + 1)
-		for i in range(self.dims + 1):
-			Z[i] = Z[i] * t ** i 		
-		Q = iM @ Z @ M
-		
-		xs, ys = self.points4matplot
-		X = np.array(xs)
-		Y = np.array(ys)
-
-		left_bezier = Bezier(list(zip(Q @ X, Q @ Y)))
-
-		_Q = np.zeros((self.dims + 1, self.dims + 1))
-		lst = []
-		for i in reversed(range(self.dims + 1)):
-			l = [-1] * i + list(range(self.dims + 1 - i))
-			lst.append(l)
-		for i, l in enumerate(lst):
-			mtx = [Q[i][e] if not e == -1 else 0 for e in l]
-			_Q[i] = np.array(mtx)
-		_Q = np.flipud(_Q)
-		
-		right_bezier = Bezier(list(zip(_Q @ X, _Q @ Y)))
-
-		return left_bezier, right_bezier
 			
 	def plot(self, ax=None, with_ctrl_pt=True, bcolor="black", ccolor="gray", resolution=100):
 		if ax is None:
@@ -510,7 +603,7 @@ def main():
 	base = PlaneLine([(0, 0), (1, 0)])
 	ax = b1.plot()
 	#base.plot(ax)
-
+	
 	nb1, nb2 = b1.split(0.5)
 	nb1.plot(ax, bcolor = "red")
 	nb2.plot(ax, bcolor = "blue")
