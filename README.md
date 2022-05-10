@@ -32,6 +32,9 @@ t:0.067 -> (x, y) = [ 3.27081548 -3.36609438]
 t:0.829 -> (x, y) = [7.00386554 1.4335414 ]
 ```
 
+## Algorithm description
+- [ベジェ曲線と直線の交点を求めたい（BezierClipping 法） - Qiita](https://qiita.com/takkaO/items/85e722febf0777375476)
+- [n次ベジェ曲線を任意の地点で分割したい　～ 再帰と行列 ～ - Qiita](https://qiita.com/takkaO/items/b76b9e33ec8eac5689b5)
 
 ## Reference
 - [Bezier Clipping](http://nishitalab.org/user/nis/ourworks/BezClip/BezierClipping.html)
